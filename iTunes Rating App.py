@@ -76,15 +76,19 @@ class iTunes_com_thread(Thread):
 #--------------------------------------------------------------
 class MainWindow(wx.Frame):
     def __init__(self, parent, title=''):
-        #Create the main window?
+        #Create the main window
         super(MainWindow, self).__init__(
             parent,
             title=title,
+            style= wx.SYSTEM_MENU | wx.CAPTION | wx.CLOSE_BOX | wx.STAY_ON_TOP
         )
         #--------------------------------------------------------------
         #Create a file manu
         filemenu = wx.Menu()
         
+        #Create a panel
+        self.panel = wx.Panel(self)
+        self.flashing_panel = False
         #Define menu items
         menu_about = filemenu.Append(
             wx.ID_ABOUT, 
@@ -108,7 +112,6 @@ class MainWindow(wx.Frame):
 
         #set the directory variable to the current directory of this script
         self.dirname = os.getcwd()
-
 
         #Create 3 sizers to arange objects in
         self.main_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -134,10 +137,10 @@ class MainWindow(wx.Frame):
             self.buttons[i].Bind(wx.EVT_BUTTON, self.OnButton)
         
         #Create a text object
-        self.artist_text = wx.StaticText(self, label="Artist:\t")
-        self.song_text = wx.StaticText(self, label="Title:\t")
-        self.album_text = wx.StaticText(self, label="Album:\t")
-        self.rating_text = wx.StaticText(self, label="Rating:\t")
+        self.artist_text = wx.StaticText(self.panel, label="Artist:\t")
+        self.song_text = wx.StaticText(self.panel, label="Title:\t")
+        self.album_text = wx.StaticText(self.panel, label="Album:\t")
+        self.rating_text = wx.StaticText(self.panel, label="Rating:\t")
         
         for i in (
             self.song_text, 
@@ -161,10 +164,13 @@ class MainWindow(wx.Frame):
         self.main_sizer.Add(self.info_sizer, 2, wx.EXPAND)
         
         #Select the sizer to use for the main window
-        self.SetSizer(self.main_sizer)
         self.SetAutoLayout(1)
         #Fit sizer 1 to window
-        self.SetSizerAndFit(self.main_sizer)
+        self.panel.SetSizerAndFit(self.main_sizer)
+
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(self.panel)
+        self.SetSizerAndFit(sizer)
 
         #initialize comunication thread
         iTunes_com_thread()
@@ -207,6 +213,7 @@ class MainWindow(wx.Frame):
             self.artist_text.SetLabel("Artist:\t" + t["artist"])
             self.song_text.SetLabel("Title:\t" + t["track_name"])
             self.album_text.SetLabel("Album:\t" + t["album"])
+            self.rating_text.SetLabel("Rating:\t" + str(t["rating"]/20))
             if update_artwork:
                 if not artwork:
                     img = wx.Image("nocover.jpg", wx.BITMAP_TYPE_ANY)
@@ -216,6 +223,18 @@ class MainWindow(wx.Frame):
                     img = wx.Image(artwork, wx.BITMAP_TYPE_ANY)
                     img = img.Scale(120,120)
                     self.icon = wx.StaticBitmap(self, bitmap=wx.BitmapFromImage(img))
+            if t["duration"] - t["position"] <= 30:
+                if self.panel.GetBackgroundColour() == "Yellow":
+                   self.panel.SetBackgroundColour(wx.NullColour)
+                   self.panel.Refresh()
+                else:
+                   self.panel.SetBackgroundColour("Yellow")
+                   self.panel.Refresh()
+            else:
+                if self.panel.GetBackgroundColour() == "Yellow":
+                   self.panel.SetBackgroundColour(wx.NullColour)
+                   self.panel.Refresh()
+
 
 #--------------------------------------------------------------
 app = wx.App(False)

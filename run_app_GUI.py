@@ -11,36 +11,56 @@ class iTunes_com_thread(Thread):
     def __init__(self):
         """Init Thread Class."""
         Thread.__init__(self)
+        self.setDaemon(1)
         self.start()    # start the thread
 
     #----------------------------------------------------------------------
     def run(self):
         """Run Worker Thread."""
-        # This is the code executing in the new thread.
+        
+        #----------------------------------------------------------------------
+        #Declare variables
         program_running = True
-        self.iTunes = iTunesBridge()
         current_track = None
         artwork = None
-        Publisher.subscribe(self.setRating, "rate")
         self.set_rating = False
         prev_track = None
+        
+        #Create bridge to iTunes for sending and recieving data to/from itunes
+        self.iTunes = iTunesBridge()
+        
+        #Subscribe to the rate publisher for messages about updating ratings
+        Publisher.subscribe(self.setRating, "rate")
+        
+        #Main loop 
         while(program_running):
+            #Only execute itunes code if it is running
             if self.iTunes.is_running():
+                #Get dictionary of information about the current track
                 current_track = self.iTunes.get_current_track_info()
+                #If the track has changed since the previous loop, update the
+                #displayed artwork
                 update_artwork = False
                 if prev_track != current_track:
                     update_artwork = True
+                    #Get the file location of the new artwork to display
                     artwork = (
                     self.iTunes.get_artwork(os.getcwd())
                     )
+                    #If the track has no artwork then display the no artwork
+                    #picture
                     if not artwork:
-                        artwork = "/Users/samperry/Python_Projects/itunes_v2/nocover.png"
+                        artwork = '/'.join((os.getcwd(), "nocover.png"))
+                #If the rating needs to be updated then set it to the updated
+                #value
                 if self.set_rating:
                     self.iTunes.set_current_track_rating(self.rating)
                 
             prev_track = current_track
-            time.sleep(0.25)
+            #Update the display with the new information
             wx.CallAfter(self.postInfo, current_track, artwork, update_artwork)
+            #pause loop briefly
+            time.sleep(0.25)
  
     #----------------------------------------------------------------------
     def postInfo(self, current_track, artwork, update_artwork):
@@ -98,22 +118,36 @@ class MainWindow(wx.Frame):
        
         #Create a list to store rating buttons in
         self.buttons = []
-        for i in xrange(5):
+        for i in xrange(6):
             #Store each button object in a list
-            self.buttons.append(wx.Button(self, -1, "&" + str(i+1)))
+            self.buttons.append(wx.Button(
+                self, 
+                -1, 
+                "&" + str(i), 
+                style=wx.BU_EXACTFIT,
+                size = (40, 28)
+            ))
             #Add each button object to the sizer
-            self.button_sizer.Add(self.buttons[i], 1, wx.EXPAND)
+            self.button_sizer.AddStretchSpacer(prop = 1)
+            self.button_sizer.Add(self.buttons[i], 0, wx.ALIGN_CENTER)
+            self.button_sizer.AddStretchSpacer(prop = 1)
             self.buttons[i].Bind(wx.EVT_BUTTON, self.OnButton)
         
         #Create a text object
         self.artist_text = wx.StaticText(self, label="Artist:\t")
         self.song_text = wx.StaticText(self, label="Title:\t")
         self.album_text = wx.StaticText(self, label="Album:\t")
+        self.rating_text = wx.StaticText(self, label="Rating:\t")
         
-        for i in (self.song_text, self.artist_text, self.album_text):
+        for i in (
+            self.song_text, 
+            self.artist_text, 
+            self.album_text,
+            self.rating_text
+        ):
             self.text_sizer.Add(i, 1, wx.EXPAND)
-        self.info_sizer.Add(self.text_sizer, 1, wx.EXPAND)
-        self.info_sizer.Add(self.button_sizer, 1, wx.EXPAND)
+        self.info_sizer.Add(self.text_sizer, 8, wx.EXPAND)
+        self.info_sizer.Add(self.button_sizer, 5, wx.EXPAND)
 
         #--------------------------------------------------------------
         #Specify the maximum size of the album artwork
@@ -121,8 +155,11 @@ class MainWindow(wx.Frame):
         img = wx.Image("nocover.png", wx.BITMAP_TYPE_ANY)
         img = img.Scale(120,120)
         self.icon = wx.StaticBitmap(self, bitmap=wx.BitmapFromImage(img))
+        
+        #Add the artwork and the information sizer to the main sizer
         self.main_sizer.Add(self.icon, 1, wx.EXPAND)
-        self.main_sizer.Add(self.info_sizer, 3, wx.EXPAND)
+        self.main_sizer.Add(self.info_sizer, 2, wx.EXPAND)
+        
         #Select the sizer to use for the main window
         self.SetSizer(self.main_sizer)
         self.SetAutoLayout(1)
@@ -179,7 +216,6 @@ class MainWindow(wx.Frame):
                     img = wx.Image(artwork, wx.BITMAP_TYPE_ANY)
                     img = img.Scale(120,120)
                     self.icon = wx.StaticBitmap(self, bitmap=wx.BitmapFromImage(img))
-                    self.icon.Refresh()
 
 #--------------------------------------------------------------
 app = wx.App(False)

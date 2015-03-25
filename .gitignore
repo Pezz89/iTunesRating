@@ -1,0 +1,17 @@
+#Python and VIM generated files
+*.pyc
+.*.swp
+
+#All picture files
+*.jpg
+*.png
+
+#All sub-directories
+*/
+
+#All hidden files
+.*
+!.gitignore
+
+#All .json files
+*.json

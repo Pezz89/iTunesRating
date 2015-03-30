@@ -55,6 +55,7 @@ class iTunes_com_thread(Thread):
                 #value
                 if self.set_rating:
                     self.iTunes.set_current_track_rating(self.rating)
+                    self.set_rating = False
                 
             prev_track = current_track
             #Update the display with the new information

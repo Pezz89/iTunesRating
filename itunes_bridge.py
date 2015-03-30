@@ -40,7 +40,6 @@ class iTunesBridge:
             return None
         return track_info
 
-
 def main():
     iTunes = iTunesBridge()
     print iTunes.is_running()

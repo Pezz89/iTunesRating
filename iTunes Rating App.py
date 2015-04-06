@@ -1,4 +1,5 @@
 import wx
+import yappi
 import os
 import time
 from threading import Thread
@@ -238,7 +239,14 @@ class MainWindow(wx.Frame):
 
 
 #--------------------------------------------------------------
-app = wx.App(False)
-frame = MainWindow(None, title="iTunes Rating")
-frame.Show()
-app.MainLoop()
+def main():
+    app = wx.App(False)
+    frame = MainWindow(None, title="iTunes Rating")
+    frame.Show()
+    app.MainLoop()
+
+if __name__ == "__main__":
+    yappi.start()
+    main()
+    yappi.get_func_stats().print_all()
+    yappi.get_thread_stats().print_all()

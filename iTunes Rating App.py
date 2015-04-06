@@ -229,6 +229,8 @@ class MainWindow(wx.Frame):
                     img = img.Scale(120,120)
                     self.icon = wx.StaticBitmap(self, bitmap=wx.BitmapFromImage(img))
             if t["duration"] - t["position"] <= 30:
+                if self.soundbool:
+                    wx.Bell()
                 if self.flashbool:
                    self.panel.SetBackgroundColour(wx.NullColour)
                    self.panel.Refresh()
@@ -238,8 +240,9 @@ class MainWindow(wx.Frame):
                    self.panel.Refresh()
                    self.flashbool = True
             else:
-                   self.panel.SetBackgroundColour(wx.NullColour)
-                   self.panel.Refresh()
+                self.soundbool = True
+                self.panel.SetBackgroundColour(wx.NullColour)
+                self.panel.Refresh()
 
 
 #--------------------------------------------------------------

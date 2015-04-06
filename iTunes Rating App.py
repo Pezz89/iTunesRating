@@ -82,7 +82,8 @@ class MainWindow(wx.Frame):
         super(MainWindow, self).__init__(
             parent,
             title=title,
-            style= wx.SYSTEM_MENU | wx.CAPTION | wx.CLOSE_BOX | wx.STAY_ON_TOP
+            style= wx.SYSTEM_MENU | wx.CAPTION | wx.CLOSE_BOX | wx.STAY_ON_TOP |
+            wx.RESIZE_BORDER
         )
         #--------------------------------------------------------------
         #Create a file manu
@@ -91,6 +92,7 @@ class MainWindow(wx.Frame):
         #Create a panel
         self.panel = wx.Panel(self)
         self.flashing_panel = False
+        self.flashbool = False
         #Define menu items
         menu_about = filemenu.Append(
             wx.ID_ABOUT, 
@@ -151,8 +153,8 @@ class MainWindow(wx.Frame):
             self.rating_text
         ):
             self.text_sizer.Add(i, 1, wx.EXPAND)
-        self.info_sizer.Add(self.text_sizer, 8, wx.EXPAND)
-        self.info_sizer.Add(self.button_sizer, 5, wx.EXPAND)
+        self.info_sizer.Add(self.text_sizer, wx.ALIGN_LEFT)
+        self.info_sizer.Add(self.button_sizer, wx.ALIGN_LEFT)
 
         #--------------------------------------------------------------
         #Specify the maximum size of the album artwork
@@ -162,18 +164,19 @@ class MainWindow(wx.Frame):
         self.icon = wx.StaticBitmap(self, bitmap=wx.BitmapFromImage(img))
         
         #Add the artwork and the information sizer to the main sizer
-        self.main_sizer.Add(self.icon, 1, wx.EXPAND)
-        self.main_sizer.Add(self.info_sizer, 2, wx.EXPAND)
+        self.main_sizer.Add(self.icon, wx.ALIGN_LEFT)
+        self.main_sizer.Add(self.info_sizer, wx.ALIGN_LEFT)
         
         #Select the sizer to use for the main window
         self.SetAutoLayout(1)
         #Fit sizer 1 to window
         self.panel.SetSizerAndFit(self.main_sizer)
-
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(self.panel)
+ 
+        sizer = wx.BoxSizer(wx.HORIZONTAL | wx.ALIGN_LEFT)
+        sizer.Add(self.panel, wx.EXPAND)
         self.SetSizerAndFit(sizer)
-
+        self.SetMinSize(self.GetBestSize())
+        self.SetMaxSize((-1, self.GetBestSize()[1]))
         #initialize comunication thread
         iTunes_com_thread()
         
@@ -226,14 +229,15 @@ class MainWindow(wx.Frame):
                     img = img.Scale(120,120)
                     self.icon = wx.StaticBitmap(self, bitmap=wx.BitmapFromImage(img))
             if t["duration"] - t["position"] <= 30:
-                if self.panel.GetBackgroundColour() == "Yellow":
+                if self.flashbool:
                    self.panel.SetBackgroundColour(wx.NullColour)
                    self.panel.Refresh()
+                   self.flashbool = False
                 else:
                    self.panel.SetBackgroundColour("Yellow")
                    self.panel.Refresh()
+                   self.flashbool = True
             else:
-                if self.panel.GetBackgroundColour() == "Yellow":
                    self.panel.SetBackgroundColour(wx.NullColour)
                    self.panel.Refresh()
 

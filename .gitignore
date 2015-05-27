@@ -5,6 +5,7 @@
 #All picture files
 *.jpg
 *.png
+!nocover.png
 
 #All sub-directories
 */
